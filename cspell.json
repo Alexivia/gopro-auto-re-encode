@@ -1,0 +1,22 @@
+{
+    "version": "0.2",
+    "ignorePaths": [],
+    "dictionaryDefinitions": [],
+    "dictionaries": [],
+    "words": [
+        "udta",
+        "gpmf",
+        "exif",
+        "ffprobe",
+        "gopro",
+        "videotoolbox",
+        "udtacopy",
+        "exiftool",
+        "gpmd",
+        "tmcd",
+        "fdsc",
+        "reencode",
+    ],
+    "ignoreWords": [],
+    "import": []
+}
