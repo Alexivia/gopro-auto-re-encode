@@ -472,7 +472,9 @@ async def gopro_reencode(input_file, output_file, quality, scuba_file=None):
         run_udta(input_file, output_file)
         run_exif(input_file, output_file)
     except StepFailedException:
-        logging.error("Post-processing steps failed due to a known pipeline error.")
+        logging.error(
+            "Post-processing steps failed due to an already parsed pipeline error."
+        )
         raise
     except Exception as e:
         logging.error("Post-processing steps failed.")
@@ -583,16 +585,25 @@ async def _encode_routine_scuba_async(
             logging.debug(
                 "Queued color corrected file for re-encoding: %s", temp_scuba_file
             )
-        except Exception:
+        except Exception as e:
             # In case putting into the queue fails for any reason, make sure we
             # release the reserved slot to avoid leaking reservations.
-            logging.debug(
-                "Error occurred, releasing queue slot reservation for %s", input_file
+            logging.error(
+                "Failed to queue color corrected file %s for re-encoding.",
+                temp_scuba_file,
             )
+            logging.debug("Error occurred: %s", e)
+            logging.debug("Releasing queue slot reservation for %s.", input_file)
             try:
                 max_queueing_semaphore.release()
-            except Exception:
-                logging.debug("Failed to release queue slot reservation after error.")
+            except Exception as e_inner:
+                logging.error(
+                    "Could not release queue slot reservation after error for %s.",
+                    input_file,
+                )
+                logging.debug(
+                    "Failed to release queue slot reservation after error: %s", e_inner
+                )
             raise
 
     async def run_gopro_reencode():
@@ -630,9 +641,15 @@ async def _encode_routine_scuba_async(
                 # Record the prior color-correction error as a failure for reporting.
                 try:
                     failed_files.append((str(input_file), repr(error)))
-                except (RuntimeError, ValueError):
+                except (RuntimeError, ValueError) as e_inner:
                     # Best-effort only: don't crash the pipeline if logging fails here.
-                    logging.debug("Failed to append failure for %s", input_file)
+                    logging.error(
+                        "Could not append prior color correction failure for %s.",
+                        input_file,
+                    )
+                    logging.debug(
+                        "Failed to append failure for %s: %s", input_file, e_inner
+                    )
 
             # Clean up temporary scuba file after a re-encoding attempt,
             # whether it succeeded or failed. If the temp file exists, remove it.
@@ -654,8 +671,12 @@ async def _encode_routine_scuba_async(
             try:
                 # Release the reservation so another producer may start color correction.
                 max_queueing_semaphore.release()
-            except Exception:
-                logging.debug("Failed to release queue slot reservation.")
+            except Exception as e_inner:
+                logging.error(
+                    "Could not release queue slot reservation for %s after re-encoding.",
+                    input_file,
+                )
+                logging.debug("Failed to release queue slot reservation: %s", e_inner)
 
     task_gopro_reencode = asyncio.create_task(run_gopro_reencode())
     tasks_dive_color_correction = []
