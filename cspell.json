@@ -16,6 +16,9 @@
         "tmcd",
         "fdsc",
         "reencode",
+        "levelname",
+        "timelapse",
+        "timelapses",
     ],
     "ignoreWords": [],
     "import": []
