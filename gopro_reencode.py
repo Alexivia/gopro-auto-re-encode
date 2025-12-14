@@ -551,14 +551,22 @@ async def _encode_routine_scuba_async(
     max_queueing_semaphore = asyncio.Semaphore(MAX_QUEUED_TASKS)
     ready_color_corrected_count = 0
     all_color_correction_done = asyncio.Event()
+    logging.debug("Finished setting up asynchronous Semaphores and Queue.")
 
     async def run_dive_color_correction(input_file, output_file, temp_scuba_file):
         # Reserve a slot for this color-corrected file before starting work.
         # This prevents creating more than MAX_QUEUED_TASKS temp files on disk.
+        logging.debug(
+            "Waiting to acquire queue slot for color correction of %s", input_file
+        )
         await max_queueing_semaphore.acquire()
+        logging.debug("Acquired queue slot for color correction of %s", input_file)
+
         error = None
         try:
+            logging.debug("Waiting to acquire concurrency slot for %s", input_file)
             async with concurrency_semaphore:
+                logging.debug("Acquired concurrency slot for %s", input_file)
                 try:
                     await dive_color_correction(str(input_file), str(temp_scuba_file))
                 except StepFailedException as e:
@@ -572,9 +580,15 @@ async def _encode_routine_scuba_async(
             await color_corrected_queue.put(
                 (input_file, output_file, temp_scuba_file, error)
             )
+            logging.debug(
+                "Queued color corrected file for re-encoding: %s", temp_scuba_file
+            )
         except Exception:
             # In case putting into the queue fails for any reason, make sure we
             # release the reserved slot to avoid leaking reservations.
+            logging.debug(
+                "Error occurred, releasing queue slot reservation for %s", input_file
+            )
             try:
                 max_queueing_semaphore.release()
             except Exception:
