@@ -2,31 +2,32 @@
 
 A tool for automatically re-encoding (a list of) GoPro files.
 
-Keeps metadata tracks.
+## Project Description
 
-Optionally color-corrects scuba videos by means of an external tool.
+This script automates the process of re-encoding GoPro videos while preserving metadata tracks, optionally color-correcting scuba videos using an external tool, and more.
+
+### Features
+
+- When re-encoding and color correcting multiples (in list mode), the script spawns multiple color correction processes in parallel.
+    - The color correction process is single threaded, so having multiple processes running concurrently speeds up the overall processing time.
+    - The number of parallel processes can be configured via a script constant.
+    - The script makes sure only a limited number of color corrected files are ready to be transcoded at any given time, since the transcoding step is not able to consume files faster than the color correction step produces them.
+    - The transcoding is dispatched to the hardware encoder, so it is performed sequentially - whatever color corrected file is ready first is transcoded first.
 
 ## Pre-requisites
 
 - `ffmpeg` (with `hevc_videotoolbox` support)
     - I use an M1 Mac, so I take advantage of the hardware encoder/decoder.
-    - I installed `ffmpeg` via [Homebrew](https://brew.sh/):
-      ```bash
-      brew install ffmpeg
-      ```
+    - Install via [Homebrew](https://brew.sh/).
 - `exiftool`
-    - Also installed via Homebrew:
-      ```bash
-      brew install exiftool
-      ```
+    - Also installed via Homebrew.
 - [`udtacopy`](https://github.com/gopro/labs/tree/master/docs/control/chapters/bin)
     - A tool to copy GoPro metadata streams from one container to another without re-encoding.
-    - I downloaded the `.zip` and unzipped it to the path where "GoPro Auto Re-encode" is located.
+    - Download and unzip the `.zip` to the project directory
 - Python 3.x
 - (Optional) [Dive Color Corrector](https://github.com/bornfree/dive-color-corrector)
     - A tool to color-correct underwater videos.
-    - I cloned the repository and made a symlink to the path where "GoPro Auto Re-encode" is located.
-    - I created a Python virtual environment to have the dependencies isolated.
+    - Create a Python virtual environment for isolated dependencies
 
 ## GoPro stream names
 
@@ -48,10 +49,7 @@ We need to add logic to check if the audio stream exists before trying to copy i
 
 ### Concatenate GoPro videos
 
-To concatenate separate GoPro videos into a single file, while preserving the
-other data streams on the `.mp4` container, create a list of all the file paths
-corresponding to a single movie into a `.txt` file. Use this `.txt` file to
-feed the file names into `ffmpeg`.
+To concatenate separate GoPro videos into a single file, while preserving the other data streams on the `.mp4` container, create a list of all the file paths corresponding to a single movie into a `.txt` file. Use this `.txt` file to feed the file names into `ffmpeg`.
 
 The contents of the file should be a line per file:
 - `file /path/to/gopro/file.MP4`
@@ -71,8 +69,7 @@ exiftool -tagsFromFile <input file>.MP4 -All:All <output file>.MP4
 
 ### Extract GoPro streams to GPX
 
-There exists a Python package that helpfully fetches the GPS stream from the
-video file and stores it into a separate GPX file.
+There exists a Python package that helpfully fetches the GPS stream from the video file and stores it into a separate GPX file.
 
 [gopro2gpx](https://github.com/juanmcasillas/gopro2gpx)
 
