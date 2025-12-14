@@ -125,9 +125,16 @@ def process_subprocess_output(stdout_b, stderr_b, remove_control_chars=False):
         stream_split = stream_in.split("\n")
 
         for line in stream_split:
-            if line[-1] == "\r":
+            # Safely handle empty lines.
+            if not line:
+                stream_out_split.append(line)
+                continue
+
+            # Remove a trailing CR if present.
+            if line.endswith("\r"):
                 line = line[:-1]
 
+            # If the line still contains CRs (progress-style updates), keep only the part after the last CR.
             if "\r" in line:
                 pos = line.rfind("\r")
                 if pos != -1:
@@ -140,8 +147,17 @@ def process_subprocess_output(stdout_b, stderr_b, remove_control_chars=False):
     stdout, stderr = decode_std_out_err(stdout_b, stderr_b)
 
     if remove_control_chars:
-        stdout = replay_stream(stdout)
-        stderr = replay_stream(stderr)
+        try:
+            stdout_replayed = replay_stream(stdout)
+            stderr_replayed = replay_stream(stderr)
+        except Exception as e:
+            logging.warning(
+                "Could not remove control characters from subprocess output."
+            )
+            logging.debug("Error removing control characters: %s", e)
+        else:
+            stdout = stdout_replayed
+            stderr = stderr_replayed
 
     return stdout, stderr
 
