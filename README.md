@@ -8,7 +8,7 @@ This script automates the process of re-encoding GoPro videos while preserving m
 
 ### Features
 
-- When re-encoding and color correcting multiples (in list mode), the script spawns multiple color correction processes in parallel.
+- When re-encoding and color correcting multiple files (in list mode), the script spawns multiple color correction processes in parallel.
     - The color correction process is single threaded, so having multiple processes running concurrently speeds up the overall processing time.
     - The number of parallel processes can be configured via a script constant.
     - The script makes sure only a limited number of color corrected files are ready to be transcoded at any given time, since the transcoding step is not able to consume files faster than the color correction step produces them.
