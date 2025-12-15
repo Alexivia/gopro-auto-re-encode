@@ -27,7 +27,8 @@ This script automates the process of re-encoding GoPro videos while preserving m
 - Python 3.x
 - (Optional) [Dive Color Corrector](https://github.com/bornfree/dive-color-corrector)
     - A tool to color-correct underwater videos.
-    - Create a Python virtual environment for isolated dependencies
+    - Create a Python virtual environment for isolated dependencies.
+    - Install the packages needed: check the repo's documentation.
 
 ## GoPro stream names
 
@@ -46,6 +47,14 @@ This script automates the process of re-encoding GoPro videos while preserving m
 Time-lapse videos do not have an audio stream, so the current script fails when trying to copy the audio stream.
 
 We need to add logic to check if the audio stream exists before trying to copy it.
+
+### Support small videos
+
+Right now it seems that the color correction tool fails when converting small videos. I will open an issue on their repo and see if I can help debug and fix it.
+
+### Add metrics
+
+It would be nice to have some metrics about the processing time (on the different steps), file sizes before and after, etc.
 
 ### Concatenate GoPro videos
 
