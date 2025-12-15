@@ -134,7 +134,8 @@ def process_subprocess_output(stdout_b, stderr_b, remove_control_chars=False):
             if line.endswith("\r"):
                 line = line[:-1]
 
-            # If the line still contains CRs (progress-style updates), keep only the part after the last CR.
+            # If the line still contains CRs (progress-style updates),
+            # keep only the part after the last CR.
             if "\r" in line:
                 pos = line.rfind("\r")
                 if pos != -1:
@@ -152,7 +153,8 @@ def process_subprocess_output(stdout_b, stderr_b, remove_control_chars=False):
             stderr_replayed = replay_stream(stderr)
         except Exception as e:
             logging.warning(
-                "Could not remove control characters from subprocess output."
+                "Could not remove control characters from subprocess output: %s",
+                type(e).__name__,
             )
             logging.debug("Error removing control characters: %s", e)
         else:
@@ -180,13 +182,9 @@ def run_udta(input_file, output_file):
             logging.debug("UDTA stdout: %s", stdout)
             logging.debug("UDTA stderr: %s", stderr)
             raise StepFailedException("UDTA step failed.", returncode=result.returncode)
-    except (FileNotFoundError, OSError) as e:
-        logging.error("UDTA execution failed: %s", type(e).__name__)
+    except Exception as e:
+        logging.error("UDTA failed: %s", type(e).__name__)
         logging.debug("Error running UDTA: %s", e)
-        raise StepFailedException("UDTA metadata copy failed.") from e
-    except subprocess.CalledProcessError as e:
-        logging.error("UDTA subprocess failed.")
-        logging.debug("UDTA stderr: %s", e.stderr.decode() if e.stderr else repr(e))
         raise StepFailedException("UDTA metadata copy failed.") from e
 
 
@@ -200,15 +198,9 @@ def run_gpmf_parser(input_file):
     logging.info("Running gpmf-parser on %s", input_file)
     try:
         subprocess.run([str(GPMF_PATH), input_file], check=True, capture_output=True)
-    except (FileNotFoundError, OSError) as e:
-        logging.error("gpmf-parser execution failed: %s", type(e).__name__)
+    except Exception as e:
+        logging.error("gpmf-parser failed: %s", type(e).__name__)
         logging.debug("Error running gpmf-parser: %s", e)
-        raise StepFailedException("gpmf-parser failed.") from e
-    except subprocess.CalledProcessError as e:
-        logging.error("gpmf-parser subprocess failed.")
-        logging.debug(
-            "gpmf-parser stderr: %s", e.stderr.decode() if e.stderr else repr(e)
-        )
         raise StepFailedException("gpmf-parser failed.") from e
 
 
@@ -232,14 +224,10 @@ def run_exif(input_file, output_file):
             check=True,
             capture_output=True,
         )
-    except (FileNotFoundError, OSError) as e:
-        logging.error("exiftool execution failed: %s", type(e).__name__)
+    except Exception as e:
+        logging.error("exiftool failed: %s", type(e).__name__)
         logging.debug("Error running exiftool: %s", e)
-        raise StepFailedException("exiftool failed.") from e
-    except subprocess.CalledProcessError as e:
-        logging.error("exiftool subprocess failed.")
-        logging.debug("exiftool stderr: %s", e.stderr.decode() if e.stderr else repr(e))
-        raise StepFailedException("exiftool failed.") from e
+        raise StepFailedException("exiftool metadata copy failed.") from e
 
 
 async def dive_color_correction(input_file, output_file):
@@ -290,16 +278,9 @@ async def dive_color_correction(input_file, output_file):
                 process.returncode, cmd, output=stdout_b, stderr=stderr_b
             )
         logging.debug("dive-color-corrector output: %s", stdout)
-    except (FileNotFoundError, OSError) as e:
-        logging.error("dive-color-corrector execution failed: %s", type(e).__name__)
+    except Exception as e:
+        logging.error("dive-color-corrector failed: %s", type(e).__name__)
         logging.debug("Error running dive-color-corrector: %s", e)
-        raise StepFailedException("dive-color-corrector failed.") from e
-    except subprocess.CalledProcessError as e:
-        logging.error("dive-color-corrector subprocess failed.")
-        logging.debug(
-            "dive-color-corrector stderr: %s",
-            e.stderr.decode() if getattr(e, "stderr", None) else repr(e),
-        )
         raise StepFailedException("dive-color-corrector failed.") from e
 
     logging.info("dive-color-corrector completed for %s.", input_file)
@@ -323,13 +304,9 @@ def ffprobe_wrapper(input_file):
             check=True,
             capture_output=True,
         )
-    except (FileNotFoundError, OSError) as e:
-        logging.error("ffprobe execution failed: %s", type(e).__name__)
+    except Exception as e:
+        logging.error("ffprobe failed: %s", type(e).__name__)
         logging.debug("Error running ffprobe: %s", e)
-        raise StepFailedException("ffprobe failed.") from e
-    except subprocess.CalledProcessError as e:
-        logging.error("ffprobe subprocess failed.")
-        logging.debug("ffprobe stderr: %s", e.stderr.decode() if e.stderr else repr(e))
         raise StepFailedException("ffprobe failed.") from e
 
 
@@ -443,13 +420,9 @@ async def gopro_reencode(input_file, output_file, quality, scuba_file=None):
             logging.error("Input file structure verification failed.")
             logging.debug("ffprobe stderr: %s", stderr)
             raise StepFailedException("ffprobe step failed due to input file error.")
-    except (FileNotFoundError, OSError) as e:
-        logging.error("ffprobe execution failed: %s", type(e).__name__)
+    except Exception as e:
+        logging.error("ffprobe failed: %s", type(e).__name__)
         logging.debug("ffprobe error: %s", e)
-        raise StepFailedException("Input file analysis failed.") from e
-    except subprocess.CalledProcessError as e:
-        logging.error("ffprobe subprocess failed.")
-        logging.debug("ffprobe stderr: %s", stderr)
         raise StepFailedException("Input file analysis failed.") from e
 
     # Get the ffmpeg command, in list format.
@@ -473,16 +446,9 @@ async def gopro_reencode(input_file, output_file, quality, scuba_file=None):
             )
         logging.debug("ffmpeg output: %s", stdout)
         logging.debug("ffmpeg error output: %s", stderr)
-    except (FileNotFoundError, OSError) as e:
-        logging.error("ffmpeg execution failed: %s", type(e).__name__)
+    except Exception as e:
+        logging.error("ffmpeg failed: %s", type(e).__name__)
         logging.debug("Error running ffmpeg: %s", e)
-        raise StepFailedException("Re-encoding failed.") from e
-    except subprocess.CalledProcessError as e:
-        logging.error("ffmpeg subprocess failed.")
-        logging.debug(
-            "ffmpeg stderr: %s",
-            e.stderr.decode() if getattr(e, "stderr", None) else repr(e),
-        )
         raise StepFailedException("Re-encoding failed.") from e
 
     logging.info("Post-processing metadata for %s.", output_file)
@@ -495,7 +461,7 @@ async def gopro_reencode(input_file, output_file, quality, scuba_file=None):
         )
         raise
     except Exception as e:
-        logging.error("Post-processing steps failed.")
+        logging.error("Post-processing failed: %s", type(e).__name__)
         logging.debug("Error in post-processing: %s", e)
         raise StepFailedException(
             "Post-processing the re-encoded file metadata failed."
@@ -607,8 +573,9 @@ async def _encode_routine_scuba_async(
             # In case putting into the queue fails for any reason, make sure we
             # release the reserved slot to avoid leaking reservations.
             logging.error(
-                "Failed to queue color corrected file %s for re-encoding.",
+                "Failed to queue color corrected file %s for re-encoding: %s",
                 temp_scuba_file,
+                type(e).__name__,
             )
             logging.debug("Error occurred: %s", e)
             logging.debug("Releasing queue slot reservation for %s.", input_file)
@@ -616,8 +583,9 @@ async def _encode_routine_scuba_async(
                 max_queueing_semaphore.release()
             except Exception as e_inner:
                 logging.error(
-                    "Could not release queue slot reservation after error for %s.",
+                    "Could not release queue slot reservation after error for %s: %s",
                     input_file,
+                    type(e_inner).__name__,
                 )
                 logging.debug(
                     "Failed to release queue slot reservation after error: %s", e_inner
@@ -691,8 +659,9 @@ async def _encode_routine_scuba_async(
                 max_queueing_semaphore.release()
             except Exception as e_inner:
                 logging.error(
-                    "Could not release queue slot reservation for %s after re-encoding.",
+                    "Could not release queue slot reservation for %s after re-encoding: %s",
                     input_file,
+                    type(e_inner).__name__,
                 )
                 logging.debug("Failed to release queue slot reservation: %s", e_inner)
 
