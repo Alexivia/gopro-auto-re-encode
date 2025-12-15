@@ -277,10 +277,12 @@ pip-selfcheck.json
 *.bin
 *.geojson
 
-udtacopy.zip
-udtacopy/*
+udtacopy
 
 gpmf-parser
 gpmf-parser/*
 
+dive-color-corrector-correct.py
+
 data/*
+internal-development/*

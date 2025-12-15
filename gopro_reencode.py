@@ -21,9 +21,11 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 
-UDTA_PATH = Path("./udtacopy/mac/udtacopy")
+UDTA_PATH = Path("./udtacopy")  # Symbolic link to the script.
 GPMF_PATH = Path("./gpmf-parser/gpmf-parser")
-COLOR_CORRECT_SCRIPT = Path("./dive-color-corrector-correct.py")
+COLOR_CORRECT_SCRIPT = Path(
+    "./dive-color-corrector-correct.py"
+)  # Symbolic link to the script.
 DIVE_VENV_PATH = Path("./.venv-dive-color-corrector")
 DIVE_VENV_PYTHON = DIVE_VENV_PATH / "bin" / "python"
 LOGS_DIR = Path("./logs")
