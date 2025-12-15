@@ -168,7 +168,9 @@ def run_udta(input_file, output_file):
     logging.info("Running udtacopy on %s -> %s", input_file, output_file)
     try:
         result = subprocess.run(
-            [str(UDTA_PATH), input_file, output_file], check=False, capture_output=True
+            [str(UDTA_PATH.absolute()), input_file, output_file],
+            check=False,
+            capture_output=True,
         )
         if result.returncode == 1:
             logging.info("UDTA exited with code 1, which is expected.")
